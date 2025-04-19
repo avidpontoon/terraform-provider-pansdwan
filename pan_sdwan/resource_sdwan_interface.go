@@ -325,7 +325,7 @@ func resourceSDWANInterfaceCreate(ctx context.Context, d *schema.ResourceData, m
 	// Add the sdwan interface to the required vsys as per the resource input
 	vsys_add_err := addInterfaceToVsys(apiKey, client.Host, client.Username, client.Password, d.Get("name").(string), d.Get("template").(string), d.Get("vsys").(string), client.SkipSSLVerification)
 	if vsys_add_err != nil {
-		return diag.Errorf("addInterfaceToVsys error: %s", vsys_add_err)
+		return diag.Errorf("addInterfaceToVsys error: %s, %s", vsys_add_err[0].Summary, vsys_add_err[0].Detail)
 	}
 	// Set the ID back to terraform as the name of the interface
 	d.SetId(d.Get("name").(string))
@@ -413,13 +413,14 @@ func resourceSDWANInterfaceUpdate(ctx context.Context, d *schema.ResourceData, m
 			if vsys_before.(string) != "" {
 				sdwan_vsys_rm_err := removeInterfaceFromVsys(apiKey, client.Host, client.Username, client.Password, d.Get("name").(string), d.Get("template").(string), vsys_before.(string), client.SkipSSLVerification)
 				if sdwan_vsys_rm_err != nil {
-					return diag.Errorf("SDWAN Update, Vsys remove error: %s", sdwan_vsys_rm_err)
+					return diag.Errorf("SDWAN Update, Vsys remove error: %s, %s", sdwan_vsys_rm_err[0].Summary, sdwan_vsys_rm_err[0].Detail)
 				}
 			}
 			// Add the interface to the new vsys
 			sdwan_vsys_add_err := addInterfaceToVsys(apiKey, client.Host, client.Username, client.Password, d.Get("name").(string), d.Get("template").(string), vsys_after.(string), client.SkipSSLVerification)
 			if sdwan_vsys_add_err != nil {
-				return diag.Errorf("SDWAN Update, Vsys add error: %s", sdwan_vsys_add_err)
+				return diag.Errorf("SDWAN Update, Vsys add error: %s, %s", sdwan_vsys_add_err[0].Summary, sdwan_vsys_add_err[0].Detail)
+
 			}
 		}
 	}
@@ -503,14 +504,15 @@ func resourceSDWANInterfaceDelete(ctx context.Context, d *schema.ResourceData, m
 			if virtualRouter != "" {
 				vr_err := removeInterfaceFromVr(apiKey, client.Host, client.Username, client.Password, d.Get("name").(string), d.Get("template").(string), virtualRouter, client.SkipSSLVerification)
 				if vr_err != nil {
-					return diag.Errorf("SDWAN Delete, VR remove error: %s", vr_err)
+					return diag.Errorf("SDWAN Delete, VR remove error: %s, %s", vr_err[0].Summary, vr_err[0].Detail)
 				}
 			}
 			// Remove the interface from its Zone if its associated
 			if zone != "" {
 				zone_err := removeInterfaceFromZone(apiKey, client.Host, client.Username, client.Password, d.Get("name").(string), d.Get("template").(string), vsys, zone, client.SkipSSLVerification)
 				if zone_err != nil {
-					return diag.Errorf("SDWAN Delete, zone remove error: %s", zone_err)
+					return diag.Errorf("SDWAN Delete, zone remove error: %s, %s", zone_err[0].Summary, zone_err[0].Detail)
+
 				}
 			}
 			// Remove the interface from its Vsys if its associated
@@ -518,7 +520,7 @@ func resourceSDWANInterfaceDelete(ctx context.Context, d *schema.ResourceData, m
 			if vsys != "" {
 				vsys_err := removeInterfaceFromVsys(apiKey, client.Host, client.Username, client.Password, d.Get("name").(string), d.Get("template").(string), vsys, client.SkipSSLVerification)
 				if vsys_err != nil {
-					return diag.Errorf("SDWAN Delete, vsys remove error: %s", vsys_err)
+					return diag.Errorf("SDWAN Delete, vsys remove error: %s, %s", vsys_err[0].Summary, vsys_err[0].Detail)
 				}
 			}
 			// Construct the URL to delete the sdwan interface - now dependencies should be removed and this should work
