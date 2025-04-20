@@ -1,4 +1,4 @@
-package pan_sdwan
+package pansdwan
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-module github.com/avidpontoon/terraform-provider-pan-sdwan
+module github.com/avidpontoon/terraform-provider-pansdwan
 
 go 1.22.9
 
