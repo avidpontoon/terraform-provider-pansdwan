@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// XML Response Structs
 type KeyGenResponse struct {
 	XMLName xml.Name `xml:"response"`
 	Text    string   `xml:",chardata"`
@@ -44,6 +45,15 @@ type sdwanInterface struct {
 			} `xml:"interface"`
 		} `xml:"entry"`
 	} `xml:"result"`
+}
+
+type XMLAPIResponse struct {
+	XMLName xml.Name `xml:"response"`
+	Status  string   `xml:"status,attr"`
+	Code    string   `xml:"code,attr"`
+	Msg     struct {
+		Lines []string `xml:"line"`
+	} `xml:"msg"`
 }
 
 func buildHttpClient(skipVerify bool) *http.Client {
@@ -426,15 +436,6 @@ func resourceSDWANInterfaceUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 	// Return nothing as we only return the error if there was one
 	return nil
-}
-
-type XMLAPIResponse struct {
-	XMLName xml.Name `xml:"response"`
-	Status  string   `xml:"status,attr"`
-	Code    string   `xml:"code,attr"`
-	Msg     struct {
-		Lines []string `xml:"line"`
-	} `xml:"msg"`
 }
 
 func resourceSDWANInterfaceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
