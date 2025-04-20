@@ -31,7 +31,7 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"pan-sdwan_interface": resourceSDWANInterface(),
+			"pansdwan_sdwan_interface": resourceSDWANInterface(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
