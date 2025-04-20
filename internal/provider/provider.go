@@ -2,6 +2,11 @@ package pansdwan
 
 import (
 	"context"
+	"crypto/tls"
+	"encoding/xml"
+	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -32,9 +37,19 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"pansdwan_sdwan_interface": resourceSDWANInterface(),
+			"pansdwan_l3_zone_entry":   resourceZoneEntry(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
+}
+
+type XMLAPIResponse struct {
+	XMLName xml.Name `xml:"response"`
+	Status  string   `xml:"status,attr"`
+	Code    string   `xml:"code,attr"`
+	Msg     struct {
+		Lines []string `xml:"line"`
+	} `xml:"msg"`
 }
 
 type APIClient struct {
@@ -51,4 +66,24 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		Password:            d.Get("password").(string),
 		SkipSSLVerification: d.Get("skip_ssl_verification").(bool),
 	}, nil
+}
+
+func buildHttpClient(skipVerify bool) *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
+		},
+		Timeout: 30 * time.Second,
+	}
+}
+
+func checkXMLResponse(body []byte) error {
+	var xmlResp XMLAPIResponse
+	if err := xml.Unmarshal(body, &xmlResp); err != nil {
+		return fmt.Errorf("failed to unmarshal XML: %w. Response: %s", err, xmlResp)
+	}
+	if xmlResp.Status == "error" {
+		return fmt.Errorf("PAN-OS API error: code=%s, message=%s. Response: %s", xmlResp.Code, xmlResp.Msg, xmlResp)
+	}
+	return nil
 }

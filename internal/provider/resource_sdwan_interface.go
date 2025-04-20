@@ -47,35 +47,6 @@ type sdwanInterface struct {
 	} `xml:"result"`
 }
 
-type XMLAPIResponse struct {
-	XMLName xml.Name `xml:"response"`
-	Status  string   `xml:"status,attr"`
-	Code    string   `xml:"code,attr"`
-	Msg     struct {
-		Lines []string `xml:"line"`
-	} `xml:"msg"`
-}
-
-func buildHttpClient(skipVerify bool) *http.Client {
-	return &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
-		},
-		Timeout: 30 * time.Second,
-	}
-}
-
-func checkXMLResponse(body []byte) error {
-	var xmlResp XMLAPIResponse
-	if err := xml.Unmarshal(body, &xmlResp); err != nil {
-		return fmt.Errorf("failed to unmarshal XML: %w. Response: %s", err, xmlResp)
-	}
-	if xmlResp.Status == "error" {
-		return fmt.Errorf("PAN-OS API error: code=%s, message=%s. Response: %s", xmlResp.Code, xmlResp.Msg, xmlResp)
-	}
-	return nil
-}
-
 func getAPIKey(deviceIP, username, password string, skip_verify bool) (string, error) {
 	// Create a custom HTTP client to allow insecure SSL connections if required by the provider
 	client := buildHttpClient(skip_verify)
