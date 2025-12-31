@@ -157,7 +157,6 @@ func resourceZoneEntryDelete(ctx context.Context, d *schema.ResourceData, m inte
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("X-PAN-KEY", apiKey)
 	httpClient := buildHttpClient(client.SkipSSLVerification)
-
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return diag.FromErr(err)
