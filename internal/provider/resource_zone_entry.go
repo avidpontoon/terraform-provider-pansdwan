@@ -61,7 +61,6 @@ func resourceZoneEntry() *schema.Resource {
 
 func resourceZoneEntryCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*APIClient)
-
 	// Construct the URL to create the sdwan interface
 	url := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/zone/entry[@name='%s']/network/layer3&element=<member>%s</member>",
 		client.Host, d.Get("template").(string), d.Get("vsys").(string), d.Get("name").(string), d.Get("interface").(string))
