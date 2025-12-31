@@ -145,7 +145,7 @@ func addInterfaceToVsys(apiKey, deviceIP, username, password, interfaceToAdd, te
 		return diag.FromErr(err)
 	}
 	if resp.StatusCode != 200 {
-		return diag.Errorf("Failed to remove interface from virtual-router: %s", string(body))
+		return diag.Errorf("Failed to add %s to vsys: %s", interfaceToAdd, string(body))
 	}
 	// Catch failures in the response
 	resp_err := checkXMLResponse(body)
@@ -177,7 +177,7 @@ func removeInterfaceFromVsys(apiKey, deviceIP, username, password, interfaceToRe
 		return diag.FromErr(err)
 	}
 	if resp.StatusCode != 200 {
-		return diag.Errorf("Failed to remove interface from virtual-router: %s", string(body))
+		return diag.Errorf("Failed to remove %s from vsys: %s", interfaceToRemove, string(body))
 	}
 	// Catch failures in the response
 	resp_err := checkXMLResponse(body)
@@ -209,7 +209,7 @@ func removeInterfaceFromVr(apiKey, deviceIP, username, password, interfaceToRemo
 		return diag.FromErr(err)
 	}
 	if resp.StatusCode != 200 {
-		return diag.Errorf("Failed to remove interface from virtual-router: %s", string(body))
+		return diag.Errorf("Failed to remove %s from virtual-router: %s", interfaceToRemove, string(body))
 	}
 	// Catch failures in the response
 	resp_err := checkXMLResponse(body)
@@ -241,7 +241,7 @@ func removeInterfaceFromZone(apiKey, deviceIP, username, password, interfaceToRe
 		return diag.FromErr(err)
 	}
 	if resp.StatusCode != 200 {
-		return diag.Errorf("Failed to remove interface from virtual-router: %s", string(body))
+		return diag.Errorf("Failed to remove %s from zone %s: %s", interfaceToRemove, zone,string(body))
 	}
 	// Catch failures in the response
 	resp_err := checkXMLResponse(body)
@@ -296,7 +296,7 @@ func resourceSDWANInterfaceCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 	if resp.StatusCode != 200 {
-		return diag.Errorf("Failed to remove interface from virtual-router: %s", string(body))
+		return diag.Errorf("Failed to create SD-WAN interface with the following element: %s. Error: %s", elementString, string(body))
 	}
 	// Catch failures in the response
 	resp_err := checkXMLResponse(body)
@@ -339,7 +339,7 @@ func resourceSDWANInterfaceRead(ctx context.Context, d *schema.ResourceData, m i
 	}
 	// Catch failures in the response
 	if resp.StatusCode != 200 {
-		return diag.Errorf("Error creating sdwan interface: %s", string(body))
+		return diag.Errorf("Error getting sdwan interface: %s", string(body))
 	}
 	if sdwan_xml_resp.Status == "error" {
 		return diag.Errorf("Error getting sdwan interface: %s", string(body))
@@ -382,14 +382,15 @@ func resourceSDWANInterfaceUpdate(ctx context.Context, d *schema.ResourceData, m
 	// Catch failures in the response
 	if resp.StatusCode != 200 {
 		body, _ := io.ReadAll(resp.Body)
-		return diag.Errorf("API error creating sdwan interface: %s", string(body))
+		return diag.Errorf("API error updating sdwan interface: %s", string(body))
 	} else {
 		// Check to see if the vsys has changed on the resource
 		// If it has changed we need to remove the interface from the old vsys and add it to the new one
 		if d.HasChange("vsys") {
 			vsys_before, vsys_after := d.GetChange("vsys")
-			fmt.Println("Before:", vsys_before)
-			fmt.Println("After:", vsys_after)
+			fmt.Println("Detected vsys change on SD-WAN interface")
+			fmt.Println("vsys before:", vsys_before)
+			fmt.Println("vsys after:", vsys_after)
 			// Remove the interface from the old vsys
 			if vsys_before.(string) != "" {
 				sdwan_vsys_rm_err := removeInterfaceFromVsys(apiKey, client.Host, client.Username, client.Password, d.Get("name").(string), d.Get("template").(string), vsys_before.(string), client.SkipSSLVerification)
@@ -436,7 +437,7 @@ func resourceSDWANInterfaceDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 	// Catch failures in the response - which are expected if the interface is still referenced elsewhere
 	if resp.StatusCode != 200 {
-		return diag.Errorf("API error creating sdwanz interface: %s", string(body))
+		return diag.Errorf("API error deleting sd-wan interface: %s", string(body))
 	}
 	dependency_err := false
 	if xml_resp.Status == "error" {
