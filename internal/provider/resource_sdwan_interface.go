@@ -47,6 +47,7 @@ type sdwanInterface struct {
 	} `xml:"result"`
 }
 
+// Generate API key for PAN device
 func getAPIKey(deviceIP, username, password string, skip_verify bool) (string, error) {
 	// Create a custom HTTP client to allow insecure SSL connections if required by the provider
 	client := buildHttpClient(skip_verify)
