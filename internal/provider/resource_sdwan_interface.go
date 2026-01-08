@@ -262,7 +262,7 @@ func buildSdwanInterfaceElement(protocol, comment string, interfaces []interface
 		members[i] = v.(string)
 	}
 	sb.WriteString(fmt.Sprintf("<protocol>%s</protocol>", protocol))
-	sb.WriteString(fmt.Sprintf("<comment>%s</comment>", comment))
+	sb.WriteString(fmt.Sprintf("<comment>%s</comment>", strings.ReplaceAll(comment, " ", "_")))
 	sb.WriteString("<interface>")
 
 	for _, intf := range members {
