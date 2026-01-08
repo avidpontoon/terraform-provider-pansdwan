@@ -262,7 +262,7 @@ func buildSdwanInterfaceElement(protocol, comment string, interfaces []interface
 		members[i] = v.(string)
 	}
 	sb.WriteString(fmt.Sprintf("<protocol>%s</protocol>", protocol))
-	sb.WriteString(fmt.Sprintf("<comment>%s</comment>", strings.ReplaceAll(comment, " ", "_")))
+	sb.WriteString(fmt.Sprintf("<comment>%s</comment>", strings.ReplaceAll(comment, " ", "%20")))
 	sb.WriteString("<interface>")
 
 	for _, intf := range members {
@@ -276,7 +276,7 @@ func resourceSDWANInterfaceCreate(ctx context.Context, d *schema.ResourceData, m
 	client := m.(*APIClient)
 
 	// Create XML Element string from resourc inputs
-	elementString := buildSdwanInterfaceElement("ipv4", d.Get("comment").(string), d.Get("members").([]interface{}))
+	elementString := buildSdwanInterfaceElement(d.Get("protocol").(string), d.Get("comment").(string), d.Get("members").([]interface{}))
 	// Construct the URL to create the sdwan interface
 	req_url := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']&element=%s",
 		client.Host, url.QueryEscape(d.Get("template").(string)), url.QueryEscape(d.Get("name").(string)), elementString)
@@ -367,8 +367,8 @@ func resourceSDWANInterfaceUpdate(ctx context.Context, d *schema.ResourceData, m
 	client := m.(*APIClient)
 
 	// Construct the URL to set the sdwan interface parameters
-	req_url := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']&element=<protocol>ipv4</protocol><comment>%s</comment>",
-		client.Host, url.QueryEscape(d.Get("template").(string)), url.QueryEscape(d.Get("name").(string)), url.QueryEscape(d.Get("comment").(string)))
+	req_url := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']&element=<protocol>%s</protocol><comment>%s</comment>",
+		client.Host, url.QueryEscape(d.Get("template").(string)), url.QueryEscape(d.Get("name").(string)), url.QueryEscape(d.Get("protocol").(string)), url.QueryEscape(d.Get("comment").(string)))
 
 	req, _ := http.NewRequest("GET", req_url, nil)
 	apiKey, _ := getAPIKey(client.Host, client.Username, client.Password, client.SkipSSLVerification)
