@@ -242,7 +242,7 @@ func removeInterfaceFromZone(apiKey, deviceIP, username, password, interfaceToRe
 		return diag.FromErr(err)
 	}
 	if resp.StatusCode != 200 {
-		return diag.Errorf("Failed to remove %s from zone %s: %s", interfaceToRemove, zone,string(body))
+		return diag.Errorf("Failed to remove %s from zone %s: %s", interfaceToRemove, zone, string(body))
 	}
 	// Catch failures in the response
 	resp_err := checkXMLResponse(body)
@@ -297,7 +297,7 @@ func resourceSDWANInterfaceCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 	if resp.StatusCode != 200 {
-		return diag.Errorf("Failed to create SD-WAN interface with the following element: %s. Error: %s", elementString, string(body))
+		return diag.Errorf("Failed to create SD-WAN interface with the following element: %s. Error: %s. With URL: %s", elementString, string(body), url)
 	}
 	// Catch failures in the response
 	resp_err := checkXMLResponse(body)
