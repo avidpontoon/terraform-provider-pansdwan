@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -129,7 +130,7 @@ func addInterfaceToVsys(apiKey, deviceIP, username, password, interfaceToAdd, te
 	client := buildHttpClient(skip_verify)
 
 	// Construct the URL to import interface into vsys
-	vsysURL := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/import/network/interface&element=<member>%s</member>", deviceIP, template, vsys, interfaceToAdd)
+	vsysURL := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/import/network/interface&element=<member>%s</member>", deviceIP, url.QueryEscape(template), url.QueryEscape(vsys), url.QueryEscape(interfaceToAdd))
 
 	req, _ := http.NewRequest("GET", vsysURL, nil)
 	req.Header.Set("Content-Type", "application/xml")
@@ -162,7 +163,7 @@ func removeInterfaceFromVsys(apiKey, deviceIP, username, password, interfaceToRe
 	client := buildHttpClient(skip_verify)
 
 	// Construct the URL to remove interface from vsys
-	vsysURL := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/import/network/interface/member[text()='%s']", deviceIP, template, vsys, interfaceToRemove)
+	vsysURL := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/import/network/interface/member[text()='%s']", deviceIP, url.QueryEscape(template), url.QueryEscape(vsys), url.QueryEscape(interfaceToRemove))
 	req, _ := http.NewRequest("GET", vsysURL, nil)
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("X-PAN-KEY", apiKey)
@@ -194,7 +195,7 @@ func removeInterfaceFromVr(apiKey, deviceIP, username, password, interfaceToRemo
 	client := buildHttpClient(skip_verify)
 
 	// Construct the URL to remove interface from virtual router
-	vsysURL := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/virtual-router/entry[@name='%s']/interface/member[text()='%s']", deviceIP, template, vr, interfaceToRemove)
+	vsysURL := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/virtual-router/entry[@name='%s']/interface/member[text()='%s']", deviceIP, url.QueryEscape(template), url.QueryEscape(vr), url.QueryEscape(interfaceToRemove))
 	req, _ := http.NewRequest("GET", vsysURL, nil)
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("X-PAN-KEY", apiKey)
@@ -226,7 +227,7 @@ func removeInterfaceFromZone(apiKey, deviceIP, username, password, interfaceToRe
 	client := buildHttpClient(skip_verify)
 
 	// Construct the URL to remove interface from zone
-	vsysURL := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/zone/entry[@name='%s']/network/layer3/member[text()='%s']", deviceIP, template, vsys, zone, interfaceToRemove)
+	vsysURL := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/zone/entry[@name='%s']/network/layer3/member[text()='%s']", deviceIP, url.QueryEscape(template), url.QueryEscape(vsys), url.QueryEscape(zone), url.QueryEscape(interfaceToRemove))
 	req, _ := http.NewRequest("GET", vsysURL, nil)
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("X-PAN-KEY", apiKey)
@@ -277,10 +278,10 @@ func resourceSDWANInterfaceCreate(ctx context.Context, d *schema.ResourceData, m
 	// Create XML Element string from resourc inputs
 	elementString := buildSdwanInterfaceElement("ipv4", d.Get("comment").(string), d.Get("members").([]interface{}))
 	// Construct the URL to create the sdwan interface
-	url := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']&element=%s",
-		client.Host, d.Get("template").(string), d.Get("name").(string), elementString)
+	req_url := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']&element=%s",
+		client.Host, url.QueryEscape(d.Get("template").(string)), url.QueryEscape(d.Get("name").(string)), elementString)
 
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", req_url, nil)
 	apiKey, _ := getAPIKey(client.Host, client.Username, client.Password, client.SkipSSLVerification)
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("X-PAN-KEY", apiKey)
@@ -297,7 +298,7 @@ func resourceSDWANInterfaceCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 	if resp.StatusCode != 200 {
-		return diag.Errorf("Failed to create SD-WAN interface with the following element: %s. Error: %s. With URL: %s", elementString, string(body), url)
+		return diag.Errorf("Failed to create SD-WAN interface with the following element: %s. Error: %s. With URL: %s", elementString, string(body), req_url)
 	}
 	// Catch failures in the response
 	resp_err := checkXMLResponse(body)
@@ -318,10 +319,10 @@ func resourceSDWANInterfaceCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceSDWANInterfaceRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*APIClient)
 	// Construct the URL to get the sdwan interface
-	url := fmt.Sprintf("https://%s/api/?type=config&action=get&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']",
-		client.Host, d.Get("template").(string), d.Get("name").(string))
+	req_url := fmt.Sprintf("https://%s/api/?type=config&action=get&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']",
+		client.Host, url.QueryEscape(d.Get("template").(string)), url.QueryEscape(d.Get("name").(string)))
 
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", req_url, nil)
 	apiKey, _ := getAPIKey(client.Host, client.Username, client.Password, client.SkipSSLVerification)
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("X-PAN-KEY", apiKey)
@@ -366,10 +367,10 @@ func resourceSDWANInterfaceUpdate(ctx context.Context, d *schema.ResourceData, m
 	client := m.(*APIClient)
 
 	// Construct the URL to set the sdwan interface parameters
-	url := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']&element=<protocol>ipv4</protocol><comment>%s</comment>",
-		client.Host, d.Get("template").(string), d.Get("name").(string), d.Get("comment").(string))
+	req_url := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']&element=<protocol>ipv4</protocol><comment>%s</comment>",
+		client.Host, url.QueryEscape(d.Get("template").(string)), url.QueryEscape(d.Get("name").(string)), url.QueryEscape(d.Get("comment").(string)))
 
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", req_url, nil)
 	apiKey, _ := getAPIKey(client.Host, client.Username, client.Password, client.SkipSSLVerification)
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("X-PAN-KEY", apiKey)
@@ -415,10 +416,10 @@ func resourceSDWANInterfaceDelete(ctx context.Context, d *schema.ResourceData, m
 	client := m.(*APIClient)
 
 	// Construct the URL to delete the sdwan interface - this is likely to fail if the interface is still referenced elsewhere
-	url := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']",
-		client.Host, d.Get("template").(string), d.Get("name").(string))
+	req_url := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']",
+		client.Host, url.QueryEscape(d.Get("template").(string)), url.QueryEscape(d.Get("name").(string)))
 
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", req_url, nil)
 	apiKey, _ := getAPIKey(client.Host, client.Username, client.Password, client.SkipSSLVerification)
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("X-PAN-KEY", apiKey)
@@ -498,10 +499,10 @@ func resourceSDWANInterfaceDelete(ctx context.Context, d *schema.ResourceData, m
 				}
 			}
 			// Construct the URL to delete the sdwan interface - now dependencies should be removed and this should work
-			url := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']",
-				client.Host, d.Get("template").(string), d.Get("name").(string))
+			req_url := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/network/interface/sdwan/units/entry[@name='%s']",
+				client.Host, url.QueryEscape(d.Get("template").(string)), url.QueryEscape(d.Get("name").(string)))
 
-			req, _ := http.NewRequest("GET", url, nil)
+			req, _ := http.NewRequest("GET", req_url, nil)
 			req.Header.Set("Content-Type", "application/xml")
 			req.Header.Set("X-PAN-KEY", apiKey)
 			tr := &http.Transport{

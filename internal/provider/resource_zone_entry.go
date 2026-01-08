@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -62,10 +63,10 @@ func resourceZoneEntry() *schema.Resource {
 func resourceZoneEntryCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*APIClient)
 	// Construct the URL to create the sdwan interface
-	url := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/zone/entry[@name='%s']/network/layer3&element=<member>%s</member>",
-		client.Host, d.Get("template").(string), d.Get("vsys").(string), d.Get("name").(string), d.Get("interface").(string))
+	req_url := fmt.Sprintf("https://%s/api/?type=config&action=set&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/zone/entry[@name='%s']/network/layer3&element=<member>%s</member>",
+		client.Host, url.QueryEscape(d.Get("template").(string)), url.QueryEscape(d.Get("vsys").(string)), url.QueryEscape(d.Get("name").(string)), url.QueryEscape(d.Get("interface").(string)))
 
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", req_url, nil)
 	apiKey, _ := getAPIKey(client.Host, client.Username, client.Password, client.SkipSSLVerification)
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("X-PAN-KEY", apiKey)
@@ -98,10 +99,10 @@ func resourceZoneEntryCreate(ctx context.Context, d *schema.ResourceData, m inte
 func resourceZoneEntryRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*APIClient)
 	// Construct the URL to get the zone interfaces
-	url := fmt.Sprintf("https://%s/api/?type=config&action=get&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/zone/entry[@name='%s']/network/layer3",
-		client.Host, d.Get("template").(string), d.Get("vsys").(string), d.Get("name").(string))
+	req_url := fmt.Sprintf("https://%s/api/?type=config&action=get&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/zone/entry[@name='%s']/network/layer3",
+		client.Host, url.QueryEscape(d.Get("template").(string)), url.QueryEscape(d.Get("vsys").(string)), url.QueryEscape(d.Get("name").(string)))
 
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", req_url, nil)
 	apiKey, _ := getAPIKey(client.Host, client.Username, client.Password, client.SkipSSLVerification)
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("X-PAN-KEY", apiKey)
@@ -149,10 +150,10 @@ func resourceZoneEntryDelete(ctx context.Context, d *schema.ResourceData, m inte
 	client := m.(*APIClient)
 
 	// Construct the URL to delete the interface from the Zone
-	url := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/zone/entry[@name='%s']/network/layer3/member[text()='%s']",
-		client.Host, d.Get("template").(string), d.Get("vsys").(string), d.Get("name").(string), d.Get("interface").(string))
+	req_url := fmt.Sprintf("https://%s/api/?type=config&action=delete&xpath=/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='%s']/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='%s']/zone/entry[@name='%s']/network/layer3/member[text()='%s']",
+		client.Host, url.QueryEscape(d.Get("template").(string)), url.QueryEscape(d.Get("vsys").(string)), url.QueryEscape(d.Get("name").(string)), url.QueryEscape(d.Get("interface").(string)))
 
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", req_url, nil)
 	apiKey, _ := getAPIKey(client.Host, client.Username, client.Password, client.SkipSSLVerification)
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("X-PAN-KEY", apiKey)
